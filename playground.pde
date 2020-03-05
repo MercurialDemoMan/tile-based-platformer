@@ -105,6 +105,7 @@ class Player extends Box
 
 /**
  * \brief tile class - specialization of box
+ */
 class Tile extends Box
 {
   TILE_TYPE  type; // type of tile
