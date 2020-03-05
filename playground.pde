@@ -1,29 +1,43 @@
-//constants
+/**
+ *\ brief physics constants
+ */
 static final float ACCEL     = 0.2;
 static final float DEACCEL   = 0.2;
 static final float GRAVITY   = 0.15;
 static final float MAX_SPEED = 3.0;
 
+/**
+ * \brief sprite dimensions
+ */
 static final int TILE_WIDTH    = 16;
 static final int TILE_HEIGHT   = 16;
 static final int PLAYER_WIDTH  = 15;
 static final int PLAYER_HEIGHT = 15;
 
+/**
+ * \brief level dimensions
+ */
 static final int LEVEL_WIDTH  = 32;
 static final int LEVEL_HEIGHT = 32;
 
+/**
+ * \brief tile types
+ */
 enum TILE_TYPE { EMPTY, SOLID, SLOPE_LEFT, SLOPE_RIGHT };
 
-//classes
-//box
+/**
+ * \brief generic box class
+ */
 class Box
 {
-  PVector pos;
-  PVector dim;
-  int     col;
+  PVector pos; // position of box
+  PVector dim; // width and height of box
+  int     col; // color of box
   
+  //constructor
   Box(float x, float y, float w, float h) { pos = new PVector(x, y); dim = new PVector(w, h); col = 0xFFFFFF; }
   
+  //draw box
   void render()
   {
     fill((col >> 16) & 0xFF, (col >> 8) & 0xFF, (col >> 0) & 0xFF);
@@ -31,18 +45,21 @@ class Box
   }
 }
 
-//player
+/**
+ * \brief player class - specialization of box
+ */
 class Player extends Box
 {
-  PVector mov;
-  boolean on_ground;
-  boolean check_ground;
+  PVector mov;          // velocity vector
+  boolean on_ground;    // on ground flag
+  boolean check_ground; // checking collision switch
   
-  float   scale_x;
+  float   scale_x;      // allows scaling sprite in x dimension
   
-  int     frame;
-  int     sub_frame;
+  int     frame;        // current frame
+  int     sub_frame;    // current subframe
   
+  //constructor
   Player(float x, float y, float w, float h) 
   { 
     super(x, y, w, h); 
@@ -54,25 +71,30 @@ class Player extends Box
     sub_frame = 0;
   }
   
-  void render()
+  //draw player
+  void render() //override
   {
     if     (mov.x < 0) { scale_x = -1; }
     else if(mov.x > 0) { scale_x =  1; }
     
+    //player is facing left
     if(scale_x < 0)
     {
+      //invert the image in x dimension
       pushMatrix();
       translate(pos.x + dim.x, pos.y);
       scale(-1.0, 1.0);
       image(player_sprite_sheet[frame], 0, 0, dim.x, dim.y);
       popMatrix();
     }
+    //player is facing right
     else
     {
       image(player_sprite_sheet[frame], pos.x, pos.y, dim.x, dim.y);
     }
   }
   
+  //update animation
   void animation()
   {
     if(on_ground && mov.x == 0) { frame = 0; }
@@ -81,25 +103,32 @@ class Player extends Box
   }
 }
 
-//tile
+/**
+ * \brief tile class - specialization of box
 class Tile extends Box
 {
-  TILE_TYPE  type;
+  TILE_TYPE  type; // type of tile
+
+  //constructor
   Tile(float x, float y, float w, float h, TILE_TYPE t) { super(x, y, w, h); type = t; }
   
+  //draw tile
   void render() //override
   {
+    //draw different image based on tile type
     if(type == TILE_TYPE.SOLID)
     {
       fill((col >> 16) & 0xFF, (col >> 8) & 0xFF, (col >> 0) & 0xFF);
       rect(pos.x, pos.y, dim.x, dim.y);
-    } else if(type == TILE_TYPE.SLOPE_LEFT)
+    } 
+    else if(type == TILE_TYPE.SLOPE_LEFT)
     {
       fill((col >> 16) & 0xFF, (col >> 8) & 0xFF, (col >> 0) & 0xFF);
       triangle(pos.x,         pos.y + dim.y, 
                pos.x + dim.x, pos.y + dim.y, 
                pos.x + dim.x, pos.y);
-    } else if(type == TILE_TYPE.SLOPE_RIGHT)
+    } 
+    else if(type == TILE_TYPE.SLOPE_RIGHT)
     {
       fill((col >> 16) & 0xFF, (col >> 8) & 0xFF, (col >> 0) & 0xFF);
       triangle(pos.x,         pos.y + dim.y, 
@@ -110,12 +139,19 @@ class Tile extends Box
 };
 
 
-//instances
-PImage player_sprite_sheet[] = new PImage[4];
-PImage background = new PImage();
-Player player     = new Player(200, 200, PLAYER_WIDTH, PLAYER_HEIGHT);
-Tile    level[][] = new Tile[LEVEL_HEIGHT][LEVEL_WIDTH];
+/**
+ * \brief instances
+ */
 
+//create player sprite sheet
+PImage player_sprite_sheet[] = new PImage[4];
+//create background image
+PImage background            = new PImage();
+//create player
+Player player                = new Player(200, 200, PLAYER_WIDTH, PLAYER_HEIGHT);
+//create world
+Tile    level[][] = new Tile[LEVEL_HEIGHT][LEVEL_WIDTH];
+//create tile type lookup table
 int level_tiles[][] =
 {
   { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
@@ -152,7 +188,9 @@ int level_tiles[][] =
   { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
 };
 
-//init
+/**
+ * \brief initialize program
+ */
 void setup() 
 { 
   size(512, 512);
@@ -160,13 +198,16 @@ void setup()
   frameRate(60);
   stroke(0xFF, 0xFF, 0xFF, 0x00);
   
+  //initialize player sprite sheet
   player_sprite_sheet[0] = loadImage("idle.png");
   player_sprite_sheet[1] = loadImage("runn.png");
   player_sprite_sheet[2] = loadImage("jmup.png");
   player_sprite_sheet[3] = loadImage("jmdw.png");
     
+  //initialize background image
   background = loadImage("map.png");
-  //initialize level
+
+  //initialize world
   for(int i = 0; i < 32; i++)
   {
     for(int j = 0; j < 32; j++)
@@ -176,15 +217,22 @@ void setup()
   }
 }
 
-//utility
-//axis aligned bounding box collision
-//side_mask is 4-bit value for ignoring left/right/up/down side of static box
+/**
+ * \brief collision utility
+ *        axis aligned bounding box collision
+ *
+ * \arg nstat - movable box
+ * \arg stat - non movable box
+ * \arg side_mask - 4-bit value for ignoring left/right/up/down side of static box
+ *                  this argument will solve studdering of player movement
+ */
 void AABB(Player nstat, Box stat, char side_mask)
 {
+  //calculate difference vector between centers
   float dx = (stat.pos.x + stat.dim.x / 2) - (nstat.pos.x + nstat.dim.x / 2);
   float dy = (stat.pos.y + stat.dim.y / 2) - (nstat.pos.y + nstat.dim.y / 2);
   
-  if(dx == 0.0 && dy == 0.0) return; //<- bullshit
+  if(dx == 0.0 && dy == 0.0) return; // what to do, if boxes are exactly overlapping?
   
   
   //collision detection
@@ -232,17 +280,21 @@ void AABB(Player nstat, Box stat, char side_mask)
   }
 }
 
-//chech if tile coordinates are within map bounds
+/**
+ * \brief check if tile coordinates are within map bounds
+ */
 boolean within_bounds(int x, int y)
 {
   return(x >= 0 && x < LEVEL_WIDTH && y >= 0 && y < LEVEL_HEIGHT);
 }
 
-//update
+/**
+ * \brief update program every frame
+ */
 void draw()
 {
+  //update gravity
   player.mov.y += GRAVITY;
-  
   
   //reset cheking ground flag
   player.check_ground = false;
